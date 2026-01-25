@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Prevent zoom on input focus on iOS */
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+  }
+
+  .btn-secondary {
+    @apply btn bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+
+  .btn-success {
+    @apply btn bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+  }
+
+  /* Score buttons */
+  .score-btn {
+    @apply flex-1 py-3 text-center rounded-lg font-medium transition-all;
+    @apply border-2 border-gray-200;
+  }
+
+  .score-btn.selected {
+    @apply border-blue-500 bg-blue-50 text-blue-700;
+  }
+
+  .score-btn:active {
+    @apply scale-95;
+  }
+
+  /* Mobile-optimized numeric keypad */
+  .keypad-btn {
+    @apply aspect-square flex items-center justify-center text-2xl font-medium rounded-xl;
+    @apply bg-gray-100 active:bg-gray-200 transition-colors;
+  }
+
+  .keypad-btn.action {
+    @apply bg-blue-600 text-white active:bg-blue-700;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
