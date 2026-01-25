@@ -127,6 +127,10 @@ npx tsx scripts/import-cdd07.ts
 - Cloud storage integration (Google Drive, Dropbox, etc.)
 - Backup verification and restore functionality
 
+## Contributing
+
+This is a personal project shared publicly in case others find it useful. I make no guarantees about functionality or ongoing maintenance. Feedback is welcome, but I can't promise timely responses. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
 ## License
 
 MIT
