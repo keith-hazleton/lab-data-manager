@@ -46,13 +46,53 @@ Web application for managing mouse experiment data. Self-hosted on local network
 - `client/src/pages/` - Main page components
 - `client/src/hooks/useApi.ts` - Data fetching hooks
 
-### Running Locally
+### Running Locally (Development)
 
 ```bash
 npm install
 npm run build -w shared
 npm run dev  # Starts both server (3001) and client (5173)
 ```
+
+### Production Deployment (Raspberry Pi)
+
+The production setup uses PM2 for process management with automatic crash recovery.
+
+**Quick setup:**
+```bash
+chmod +x scripts/setup-pi.sh
+./scripts/setup-pi.sh
+```
+
+**What this does:**
+- Builds all packages (shared, server, client)
+- Installs and configures PM2
+- Sets up auto-start on Pi reboot
+- Adds health check cron job (every 5 minutes)
+
+**Key files:**
+- `ecosystem.config.cjs` - PM2 configuration
+- `scripts/setup-pi.sh` - Automated setup script
+- `logs/` - PM2 log files (error.log, out.log)
+
+**Useful commands:**
+```bash
+pm2 status              # Check if server is running
+pm2 logs                # View server logs
+pm2 restart all         # Restart server
+pm2 monit               # Live monitoring dashboard
+```
+
+**Reliability features:**
+- Auto-restart on crash (max 10 restarts)
+- Memory limit restart at 200MB (safe for Pi)
+- Health check at `/api/health` every 5 minutes
+- Automatic startup on Pi reboot
+- SQLite WAL mode protects against power loss
+
+**Accessing from other devices:**
+- Find Pi's IP: `hostname -I`
+- Access at: `http://<pi-ip>:3001`
 
 ## Test Data
 

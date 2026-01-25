@@ -34,7 +34,7 @@ data/*.db-shm
 Thumbs.db
 
 # Logs
-logs/
+logs/*.log
 *.log
 npm-debug.log*
 
