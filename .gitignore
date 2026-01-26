@@ -47,3 +47,5 @@ coverage/
 *.tgz
 .cache/
 data/backup-history.json
+data/integrity-history.json
+data/certs/

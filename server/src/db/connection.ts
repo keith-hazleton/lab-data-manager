@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -19,7 +19,12 @@ export function getDatabase(): Database.Database {
 
 export function initializeDatabase(): void {
   const database = getDatabase();
-  const schemaPath = join(__dirname, 'schema.sql');
+  // Schema is in src/db, not dist/db - adjust path based on whether we're running from dist or src
+  let schemaPath = join(__dirname, 'schema.sql');
+  if (!existsSync(schemaPath)) {
+    // Running from dist - schema is in ../src/db relative to project root
+    schemaPath = join(__dirname, '../../src/db/schema.sql');
+  }
   const schema = readFileSync(schemaPath, 'utf-8');
   database.exec(schema);
 

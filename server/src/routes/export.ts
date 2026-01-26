@@ -3,12 +3,22 @@ import { getDatabase } from '../db/connection.js';
 import { ApiError } from '../middleware/error-handler.js';
 import {
   formatExport,
+  convertToCSV,
   calculateSurvivalDays,
+  exportExperiments,
+  exportTreatmentGroups,
+  exportSubjects,
+  exportAllObservations,
+  exportAllSamples,
+  exportStorageBoxes,
+  exportFreezers,
+  generateExportMetadata,
   type SurvivalRow,
   type ObservationExportRow,
   type SampleInventoryRow
 } from '../services/export.js';
 import type { ExportFormat } from '@lab-data-manager/shared';
+import archiver from 'archiver';
 
 export const exportRouter = Router();
 
@@ -206,5 +216,132 @@ exportRouter.get('/storage', (req, res) => {
   const filename = box_id ? `storage_box_${box_id}` : `storage_freezer_${freezer_id}`;
   res.setHeader('Content-Type', contentType);
   res.setHeader('Content-Disposition', `attachment; filename="${filename}.${extension}"`);
+  res.send(content);
+});
+
+// ============================================
+// Comprehensive Export Endpoints
+// ============================================
+
+// GET /api/export/all - Export all tables as ZIP file
+exportRouter.get('/all', (_req, res) => {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const filename = `lab-data-export-${timestamp}.zip`;
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+  const archive = archiver('zip', { zlib: { level: 9 } });
+
+  archive.on('error', (err) => {
+    console.error('Archive error:', err);
+    res.status(500).end();
+  });
+
+  archive.pipe(res);
+
+  // Add each table as CSV
+  const experiments = exportExperiments();
+  archive.append(convertToCSV(experiments), { name: 'experiments.csv' });
+
+  const treatmentGroups = exportTreatmentGroups();
+  archive.append(convertToCSV(treatmentGroups), { name: 'treatment_groups.csv' });
+
+  const subjects = exportSubjects();
+  archive.append(convertToCSV(subjects), { name: 'subjects.csv' });
+
+  const observations = exportAllObservations();
+  archive.append(convertToCSV(observations), { name: 'observations.csv' });
+
+  const samples = exportAllSamples();
+  archive.append(convertToCSV(samples), { name: 'samples.csv' });
+
+  const storageBoxes = exportStorageBoxes();
+  archive.append(convertToCSV(storageBoxes), { name: 'storage_boxes.csv' });
+
+  const freezers = exportFreezers();
+  archive.append(convertToCSV(freezers), { name: 'freezers.csv' });
+
+  // Add metadata
+  const metadata = generateExportMetadata();
+  archive.append(JSON.stringify(metadata, null, 2), { name: 'metadata.json' });
+
+  archive.finalize();
+});
+
+// GET /api/export/experiments - Export all experiments
+exportRouter.get('/experiments', (req, res) => {
+  const { format = 'csv' } = req.query;
+  const data = exportExperiments();
+  const { content, contentType, extension } = formatExport(data, format as ExportFormat);
+
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="experiments.${extension}"`);
+  res.send(content);
+});
+
+// GET /api/export/treatment-groups - Export all treatment groups
+exportRouter.get('/treatment-groups', (req, res) => {
+  const { format = 'csv' } = req.query;
+  const data = exportTreatmentGroups();
+  const { content, contentType, extension } = formatExport(data, format as ExportFormat);
+
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="treatment_groups.${extension}"`);
+  res.send(content);
+});
+
+// GET /api/export/subjects - Export all subjects
+exportRouter.get('/subjects', (req, res) => {
+  const { format = 'csv' } = req.query;
+  const data = exportSubjects();
+  const { content, contentType, extension } = formatExport(data, format as ExportFormat);
+
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="subjects.${extension}"`);
+  res.send(content);
+});
+
+// GET /api/export/observations/all - Export all observations (not just per-experiment)
+exportRouter.get('/observations/all', (req, res) => {
+  const { format = 'csv' } = req.query;
+  const data = exportAllObservations();
+  const { content, contentType, extension } = formatExport(data, format as ExportFormat);
+
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="observations.${extension}"`);
+  res.send(content);
+});
+
+// GET /api/export/samples/all - Export all samples (not just per-experiment)
+exportRouter.get('/samples/all', (req, res) => {
+  const { format = 'csv' } = req.query;
+  const data = exportAllSamples();
+  const { content, contentType, extension } = formatExport(data, format as ExportFormat);
+
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="samples.${extension}"`);
+  res.send(content);
+});
+
+// GET /api/export/freezers - Export all freezers
+exportRouter.get('/freezers', (req, res) => {
+  const { format = 'csv' } = req.query;
+  const data = exportFreezers();
+  const { content, contentType, extension } = formatExport(data, format as ExportFormat);
+
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="freezers.${extension}"`);
+  res.send(content);
+});
+
+// GET /api/export/storage-boxes - Export all storage boxes
+exportRouter.get('/storage-boxes', (req, res) => {
+  const { format = 'csv' } = req.query;
+  const data = exportStorageBoxes();
+  const { content, contentType, extension } = formatExport(data, format as ExportFormat);
+
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="storage_boxes.${extension}"`);
   res.send(content);
 });

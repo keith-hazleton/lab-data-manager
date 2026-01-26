@@ -157,6 +157,86 @@ before being saved locally or synced to cloud. To restore: `gpg --decrypt backup
 
 See `scripts/setup-pi.sh` for USB drive and rclone setup instructions
 
+### HTTPS Support (Implemented)
+
+The server supports HTTPS with automatic self-signed certificate generation.
+
+**Features:**
+- Automatic certificate generation on first production run
+- Self-signed certificates valid for 365 days
+- Auto-regeneration when certificates expire or are near expiry (<30 days)
+- Graceful fallback to HTTP if certificate generation fails
+
+**Configuration (environment variables):**
+```bash
+NODE_ENV=production                 # Enables HTTPS by default
+HTTPS_ENABLED=true                  # Force enable (or 'false' to disable)
+PORT=3001                           # HTTPS port
+HTTP_PORT=3000                      # HTTP redirect port (optional)
+HTTP_REDIRECT=true                  # Enable HTTP->HTTPS redirect (optional)
+```
+
+**Certificate files:** `data/certs/server.crt` and `data/certs/server.key`
+
+**Accessing HTTPS:**
+- Self-signed certificates will show a browser warning
+- Accept the warning to proceed (this is expected for self-signed certs)
+- For better security, add the certificate to your system's trusted store
+
+### Database Integrity Checks (Implemented)
+
+Automatic database integrity verification using SQLite PRAGMA commands.
+
+**Features:**
+- Startup integrity check on server start
+- Daily scheduled checks (default: 2:30am, 30 min after backup)
+- Runs `PRAGMA integrity_check`, `quick_check`, and `foreign_key_check`
+- Results included in backup status API
+
+**Configuration:**
+```bash
+INTEGRITY_CHECK_SCHEDULE="30 2 * * *"  # Cron schedule (default: 2:30am)
+```
+
+**API endpoints:**
+- `GET /api/backup/status` - Includes `integrity` object with last check result
+- `GET /api/backup/integrity` - History of integrity check results
+- `POST /api/backup/integrity/check` - Manually trigger an integrity check
+
+**Files:**
+- `server/src/services/integrity.ts` - Integrity check service
+- `data/integrity-history.json` - Check history records
+
+### Comprehensive Data Export (Implemented)
+
+Export all data tables as CSV files via API or web interface.
+
+**Web interface:**
+- "Export All" button on experiments list page downloads ZIP with all data
+- Download icon on each experiment card exports that experiment's observations and samples
+
+**API endpoints:**
+- `GET /api/export/all` - ZIP file containing all tables as CSVs
+- `GET /api/export/experiments` - All experiments
+- `GET /api/export/treatment-groups` - All treatment groups
+- `GET /api/export/subjects` - All subjects
+- `GET /api/export/observations/all` - All observations (cross-experiment)
+- `GET /api/export/samples/all` - All samples (cross-experiment)
+- `GET /api/export/freezers` - All freezers
+- `GET /api/export/storage-boxes` - All storage boxes
+
+**ZIP export contents:**
+- `experiments.csv`
+- `treatment_groups.csv`
+- `subjects.csv`
+- `observations.csv`
+- `samples.csv`
+- `freezers.csv`
+- `storage_boxes.csv`
+- `metadata.json` (export timestamp, version, row counts)
+
+**Format options:** Add `?format=json` to any endpoint for JSON output (default: CSV)
+
 ## Notes
 
 - Exit types for subjects: `natural_death`, `sacrificed_endpoint`, `sacrificed_scheduled`, `excluded`, `other`

@@ -105,6 +105,21 @@ npm start
 - `GET /api/plots/css` - CSS score timeseries data
 - `GET /api/plots/treatment-groups` - Unified treatment groups
 
+### Data Export
+- `GET /api/export/all` - Download all data as ZIP file
+- `GET /api/export/experiments` - Export experiments (CSV or JSON)
+- `GET /api/export/subjects` - Export all subjects
+- `GET /api/export/observations/all` - Export all observations
+- `GET /api/export/samples/all` - Export all samples
+- `GET /api/export/freezers` - Export freezers
+- `GET /api/export/storage-boxes` - Export storage boxes
+
+### Backup & Integrity
+- `GET /api/backup/status` - Backup config and integrity status
+- `GET /api/backup/history` - Backup history
+- `POST /api/backup/trigger` - Manual backup
+- `POST /api/backup/integrity/check` - Manual integrity check
+
 ## Data Import
 
 Import experiment data from CSV files using the import scripts:
@@ -113,6 +128,29 @@ Import experiment data from CSV files using the import scripts:
 npx tsx scripts/import-cdd07.ts
 ```
 
+## Security & Reliability
+
+### HTTPS Support
+- Self-signed certificates auto-generated on first production run
+- Enable with `HTTPS_ENABLED=true` or `NODE_ENV=production`
+- Optional HTTP redirect with `HTTP_REDIRECT=true`
+
+### Automatic Backups
+- Daily scheduled backups (configurable schedule)
+- GPG encryption support for sensitive data
+- Cloud sync via rclone (OneDrive, Google Drive, etc.)
+- SHA256 checksum verification
+- Configurable retention policy
+
+### Database Integrity
+- Automatic integrity checks on startup and daily
+- SQLite PRAGMA integrity_check, quick_check, and foreign_key_check
+- Results available via API
+
+### Data Export
+- Export all data as ZIP with CSVs and metadata
+- Individual table exports in CSV or JSON format
+
 ## Future Directions
 
 ### ELISA/qPCR Module
@@ -120,12 +158,6 @@ npx tsx scripts/import-cdd07.ts
 - Link plate wells to samples and subjects
 - Standard curve fitting and concentration calculations
 - Plate visualization and heatmaps
-
-### Automatic Backups
-- Scheduled database backups
-- Local drive backup destination
-- Cloud storage integration (Google Drive, Dropbox, etc.)
-- Backup verification and restore functionality
 
 ## Contributing
 
