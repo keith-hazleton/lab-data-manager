@@ -11,6 +11,7 @@ import { samplesRouter } from './routes/samples.js';
 import { storageRouter } from './routes/storage.js';
 import { exportRouter } from './routes/export.js';
 import { plotsRouter } from './routes/plots.js';
+import { backupRouter } from './routes/backup.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +40,7 @@ export function createApp() {
   app.use('/api/storage', storageRouter);
   app.use('/api/export', exportRouter);
   app.use('/api/plots', plotsRouter);
+  app.use('/api/backup', backupRouter);
 
   // In production, serve the built client
   if (isProduction) {

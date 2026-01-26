@@ -1,10 +1,14 @@
 import { createApp } from './app.js';
 import { initializeDatabase, closeDatabase } from './db/connection.js';
+import { startBackupScheduler, stopBackupScheduler } from './services/backup.js';
 
 const PORT = process.env.PORT || 3001;
 
 // Initialize database
 initializeDatabase();
+
+// Start backup scheduler
+startBackupScheduler();
 
 // Create and start server
 const app = createApp();
@@ -17,6 +21,7 @@ const server = app.listen(PORT, () => {
 // Graceful shutdown
 function shutdown() {
   console.log('\nShutting down...');
+  stopBackupScheduler();
   server.close(() => {
     closeDatabase();
     console.log('Server closed');

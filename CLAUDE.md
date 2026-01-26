@@ -119,20 +119,43 @@ Design considerations:
 - Need to handle replicates and calculate CV
 - Consider storing raw OD values vs calculated concentrations
 
-### Automatic Backups
+### Automatic Backups (Implemented)
 
-Scheduled database backups to multiple destinations:
+The backup system supports scheduled database backups to multiple destinations:
 
-- **Local drive**: External drive or NAS
-- **Cloud storage**: Google Drive, Dropbox, or S3
-- **Schedule**: Daily or on-change backups
-- **Verification**: Checksum validation, restore testing
-- **Retention**: Configurable backup history
+**Features:**
+- Daily scheduled backups (default: 2am)
+- GPG encryption before storage (recommended for sensitive data)
+- Local USB drive storage
+- Cloud sync via rclone (OneDrive, Google Drive, etc.)
+- SHA256 checksum verification
+- 30-day retention policy (configurable)
+- API endpoints for status, history, and manual triggers
 
-Implementation options:
-- Cron job or node-cron for scheduling
-- Simple file copy for SQLite (with WAL checkpoint first)
-- Could add a backup status indicator to the UI
+**Configuration (environment variables):**
+```bash
+BACKUP_ENABLED=true                      # Enable scheduled backups
+BACKUP_DIR=/mnt/usb/lab-backups          # Local backup path
+BACKUP_SCHEDULE="0 2 * * *"              # Cron schedule (daily at 2am)
+BACKUP_RETENTION_DAYS=30                 # Days to keep backups
+BACKUP_GPG_RECIPIENT=your@email.com      # GPG key for encryption (recommended)
+BACKUP_RCLONE_REMOTE=onedrive:lab-backups # Cloud destination (optional)
+```
+
+**Encryption:** When `BACKUP_GPG_RECIPIENT` is set, backups are encrypted with GPG
+before being saved locally or synced to cloud. To restore: `gpg --decrypt backup.db.gpg > restored.db`
+
+**API endpoints:**
+- `GET /api/backup/status` - Current config and last backup info
+- `GET /api/backup/history` - List of recent backups with checksums
+- `POST /api/backup/trigger` - Manually trigger a backup
+
+**Files:**
+- `server/src/services/backup.ts` - Backup service with scheduler
+- `server/src/routes/backup.ts` - API endpoints
+- `data/backup-history.json` - Backup history records
+
+See `scripts/setup-pi.sh` for USB drive and rclone setup instructions
 
 ## Notes
 
