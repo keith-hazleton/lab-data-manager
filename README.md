@@ -130,11 +130,6 @@ npx tsx scripts/import-cdd07.ts
 
 ## Security & Reliability
 
-### HTTPS Support
-- Self-signed certificates auto-generated on first production run
-- Enable with `HTTPS_ENABLED=true` or `NODE_ENV=production`
-- Optional HTTP redirect with `HTTP_REDIRECT=true`
-
 ### Automatic Backups
 - Daily scheduled backups (configurable schedule)
 - GPG encryption support for sensitive data

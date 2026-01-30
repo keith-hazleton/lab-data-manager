@@ -157,32 +157,6 @@ before being saved locally or synced to cloud. To restore: `gpg --decrypt backup
 
 See `scripts/setup-pi.sh` for USB drive and rclone setup instructions
 
-### HTTPS Support (Implemented)
-
-The server supports HTTPS with automatic self-signed certificate generation.
-
-**Features:**
-- Automatic certificate generation on first production run
-- Self-signed certificates valid for 365 days
-- Auto-regeneration when certificates expire or are near expiry (<30 days)
-- Graceful fallback to HTTP if certificate generation fails
-
-**Configuration (environment variables):**
-```bash
-NODE_ENV=production                 # Enables HTTPS by default
-HTTPS_ENABLED=true                  # Force enable (or 'false' to disable)
-PORT=3001                           # HTTPS port
-HTTP_PORT=3000                      # HTTP redirect port (optional)
-HTTP_REDIRECT=true                  # Enable HTTP->HTTPS redirect (optional)
-```
-
-**Certificate files:** `data/certs/server.crt` and `data/certs/server.key`
-
-**Accessing HTTPS:**
-- Self-signed certificates will show a browser warning
-- Accept the warning to proceed (this is expected for self-signed certs)
-- For better security, add the certificate to your system's trusted store
-
 ### Database Integrity Checks (Implemented)
 
 Automatic database integrity verification using SQLite PRAGMA commands.
