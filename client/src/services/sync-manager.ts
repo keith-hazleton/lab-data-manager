@@ -23,7 +23,7 @@ export async function syncPendingMutations(): Promise<SyncPushResult> {
     return { total: 0, succeeded: 0, failed: 0, conflicts: 0, errors: [] };
   }
 
-  const mutations = queue.map(item => ({
+  const mutations = queue.map((item: { id: string; type: string; payload: Record<string, unknown>; timestamp: number; experimentId: number }) => ({
     id: item.id,
     type: item.type,
     payload: item.payload,
@@ -39,7 +39,7 @@ export async function syncPendingMutations(): Promise<SyncPushResult> {
   }
 
   // Re-download experiment data for affected experiments to get server-calculated fields
-  const experimentIds = new Set(queue.map(item => item.experimentId));
+  const experimentIds = new Set(queue.map((item: { experimentId: number }) => item.experimentId));
   for (const expId of experimentIds) {
     try {
       const data = await api.get<{
