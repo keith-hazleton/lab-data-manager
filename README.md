@@ -21,6 +21,13 @@ A web application for managing laboratory mouse experiment data, including subje
 - Drag-and-drop sample assignment
 - Track sample locations and retrieval
 
+### Offline Data Entry (PWA)
+- Progressive Web App installable on iOS Safari / Android / desktop
+- Sync experiment data for offline use before going to areas without connectivity
+- Enter observations, batch entries, death/sacrifice records, and samples offline
+- Queued changes sync automatically when back online with conflict detection
+- Visual indicator shows pending changes and sync status
+
 ### Plots & Visualization
 - **Survival Curves**: Kaplan-Meier step functions with proper censoring
 - **Weight Over Time**: Median by treatment group or individual mouse traces
@@ -31,6 +38,7 @@ A web application for managing laboratory mouse experiment data, including subje
 ## Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite, TailwindCSS, TanStack Query, Recharts
+- **PWA**: vite-plugin-pwa (Workbox), idb (IndexedDB)
 - **Backend**: Node.js, Express, TypeScript
 - **Database**: SQLite (better-sqlite3)
 - **Monorepo**: npm workspaces
@@ -113,6 +121,10 @@ npm start
 - `GET /api/export/samples/all` - Export all samples
 - `GET /api/export/freezers` - Export freezers
 - `GET /api/export/storage-boxes` - Export storage boxes
+
+### Offline Sync
+- `GET /api/sync/experiment/:id` - Download experiment data for offline use
+- `POST /api/sync/push` - Push queued offline mutations to server
 
 ### Backup & Integrity
 - `GET /api/backup/status` - Backup config and integrity status

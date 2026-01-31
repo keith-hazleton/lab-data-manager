@@ -31,9 +31,19 @@ Web application for managing mouse experiment data. Self-hosted on local network
    - Cross-experiment comparison by treatment group name
    - Clickable legend to show/hide treatment groups
 
+5. **PWA Offline Support**
+   - Progressive Web App installable on iOS Safari
+   - "Sync for Offline" button on experiment dashboard downloads data to IndexedDB
+   - Offline data entry for observations, batch entry, death/sacrifice, sample collection
+   - Mutations queued in IndexedDB when offline, pushed on reconnect
+   - Manual "Sync Now" button (no Background Sync — iOS doesn't support it)
+   - Conflict detection: if same observation exists, keeps latest by timestamp
+   - Offline indicator bar shows pending count and sync status
+
 ### Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite, TailwindCSS, TanStack Query, Recharts
+- **PWA**: vite-plugin-pwa (Workbox), idb (IndexedDB)
 - **Backend**: Node.js, Express, TypeScript
 - **Database**: SQLite (better-sqlite3) at `data/lab-data.db`
 - **Monorepo**: npm workspaces (shared, server, client)
@@ -44,7 +54,12 @@ Web application for managing mouse experiment data. Self-hosted on local network
 - `server/src/routes/` - API endpoints
 - `server/src/db/schema.sql` - Database schema
 - `client/src/pages/` - Main page components
-- `client/src/hooks/useApi.ts` - Data fetching hooks
+- `client/src/hooks/useApi.ts` - Data fetching hooks (with offline mutation queueing)
+- `client/src/hooks/useOfflineData.ts` - Offline-aware data hooks (fallback to IndexedDB)
+- `client/src/db/offline-db.ts` - IndexedDB storage layer
+- `client/src/services/sync-manager.ts` - Sync push/download logic
+- `client/src/context/AppContext.tsx` - Online/offline state, pending count, sync actions
+- `server/src/routes/sync.ts` - Bulk sync API endpoints
 
 ### Running Locally (Development)
 
@@ -101,6 +116,50 @@ CDD07 experiment imported from `CDD07_metadata - Oct 2025.csv`:
 - Weight and CSS observations
 - Blood and serum samples
 - 2 death events for survival curve testing
+
+### PWA Offline Support (Implemented)
+
+Progressive Web App with offline data entry for iOS Safari. Users sync experiment data before going to the basement, enter observations offline, then sync back when online.
+
+**How it works:**
+1. On experiment dashboard, click "Sync for Offline" to download all data to IndexedDB
+2. Go offline (basement, airplane mode, etc.)
+3. Enter observations, batch entries, death/sacrifices, or samples as normal
+4. Mutations are queued in IndexedDB (shown in bottom bar as "X pending")
+5. When back online, click "Sync Now" to push changes to server
+6. Server processes each mutation, detects conflicts (same subject+date), keeps latest
+7. After push, fresh data is re-downloaded to update server-calculated fields
+
+**Architecture:**
+- `vite-plugin-pwa` + Workbox for service worker and app manifest
+- `idb` library for IndexedDB (replaces old localStorage queue)
+- Manual sync only (no Background Sync API — iOS doesn't support it)
+- Service worker caches app shell only; API data lives in IndexedDB
+
+**API endpoints:**
+- `GET /api/sync/experiment/:id` — returns experiment + treatment groups + subjects + observations (last 30 days) + samples
+- `POST /api/sync/push` — receives array of queued mutations, processes in order, returns per-item success/failure/conflict
+
+**Key files:**
+- `server/src/routes/sync.ts` — Sync API endpoints
+- `client/src/db/offline-db.ts` — IndexedDB storage layer (stores: experiments, treatmentGroups, subjects, observations, samples, syncQueue, syncMeta)
+- `client/src/services/sync-manager.ts` — Push/download logic
+- `client/src/hooks/useOfflineData.ts` — Offline-aware query hooks
+- `client/src/hooks/useApi.ts` — Mutation hooks queue to IndexedDB when offline
+- `client/src/context/AppContext.tsx` — Online state, pendingCount, syncNow()
+- `client/src/components/OfflineIndicator.tsx` — Bottom bar with status + sync button
+- `client/src/components/SyncForOffline.tsx` — Download button on experiment dashboard
+
+**iOS considerations:**
+- `registerType: 'prompt'` avoids silent updates that confuse iOS Safari
+- IndexedDB for all data (not Cache API) — more reliable on iOS long-term
+- `apple-mobile-web-app-capable` meta tag in index.html
+
+**Offline-capable pages:**
+- MouseEntry (individual observation entry)
+- BatchEntry (batch "all normal" observations)
+- DeathSacrifice (record exits)
+- SampleCollection (batch sample creation)
 
 ## Future Directions
 
