@@ -276,3 +276,4 @@ Export all data tables as CSV files via API or web interface.
 - Only `natural_death` counts as an event in Kaplan-Meier; others are censored
 - Treatment groups matched across experiments by name (case-sensitive)
 - CSS thresholds: Warning at 4, Critical at 7
+- `.gitignore` has `*.d.ts` to exclude compiled declaration files — hand-written `.d.ts` files (like `client/src/vite-env.d.ts`) need a `!` exception in `.gitignore` to be tracked
