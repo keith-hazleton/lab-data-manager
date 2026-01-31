@@ -15,6 +15,7 @@ import { GlobalSamplesBrowser } from './pages/GlobalSamplesBrowser';
 import { Plots } from './pages/Plots';
 import { ExperimentSetup } from './pages/setup/ExperimentSetup';
 import { DaySummary } from './pages/DaySummary';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/samples" element={<GlobalSamplesBrowser />} />
         <Route path="/plots" element={<Plots />} />
       </Routes>
+      <OfflineIndicator />
     </Layout>
   );
 }

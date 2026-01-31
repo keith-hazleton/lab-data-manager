@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { useExperiment, useSubjects, useCreateSamplesBatch } from '../hooks/useApi';
+import { useExperiment, useCreateSamplesBatch } from '../hooks/useApi';
+import { useOfflineSubjects } from '../hooks/useOfflineData';
 import { Card, CardBody } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
@@ -27,7 +28,7 @@ export function SampleCollection() {
   const navigate = useNavigate();
 
   const { data: experiment } = useExperiment(expId);
-  const { data: subjects, isLoading } = useSubjects(expId, { status: 'alive' });
+  const { data: subjects, isLoading } = useOfflineSubjects(expId, { status: 'alive' });
   const createBatch = useCreateSamplesBatch();
 
   const [selectedMice, setSelectedMice] = useState<Set<number>>(new Set());

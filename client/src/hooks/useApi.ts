@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { experimentsApi, subjectsApi, observationsApi, samplesApi, storageApi, plotsApi } from '../api';
+import { addToSyncQueue, writeOptimisticObservation, writeOptimisticSubjectUpdate } from '../db/offline-db';
+import { useAppContext } from '../context/AppContext';
 import type { AggregateMode } from '@lab-data-manager/shared';
 import type {
   CreateExperimentInput,
@@ -119,9 +121,29 @@ export function useUpdateSubject() {
 
 export function useRecordExit() {
   const queryClient = useQueryClient();
+  const { isOnline, refreshPendingCount } = useAppContext();
   return useMutation({
-    mutationFn: ({ id, input }: { id: number; input: RecordExitInput }) =>
-      subjectsApi.recordExit(id, input),
+    mutationFn: async ({ id, input, experimentId }: { id: number; input: RecordExitInput; experimentId?: number }) => {
+      if (!isOnline) {
+        await addToSyncQueue({
+          type: 'recordExit',
+          payload: { subject_id: id, ...input } as unknown as Record<string, unknown>,
+          experimentId: experimentId || 0,
+        });
+        // Optimistically update subject status in IndexedDB
+        const status = input.exit_type === 'excluded' ? 'excluded' :
+          input.exit_type === 'natural_death' ? 'dead' : 'sacrificed';
+        await writeOptimisticSubjectUpdate(id, {
+          status,
+          exit_date: input.exit_date,
+          exit_type: input.exit_type,
+          exit_reason: input.exit_reason || null,
+        });
+        await refreshPendingCount();
+        return { _queued: true } as unknown as ReturnType<typeof subjectsApi.recordExit> extends Promise<infer T> ? T : never;
+      }
+      return subjectsApi.recordExit(id, input);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subjects'] });
       queryClient.invalidateQueries({ queryKey: ['cages'] });
@@ -184,8 +206,33 @@ export function useObservationAlerts(experimentId: number, date?: string) {
 
 export function useCreateObservation() {
   const queryClient = useQueryClient();
+  const { isOnline, refreshPendingCount } = useAppContext();
   return useMutation({
-    mutationFn: (input: CreateObservationInput) => observationsApi.create(input),
+    mutationFn: async (input: CreateObservationInput) => {
+      if (!isOnline) {
+        // Queue for later sync
+        await addToSyncQueue({
+          type: 'createObservation',
+          payload: input as unknown as Record<string, unknown>,
+          experimentId: (input as unknown as Record<string, unknown>)._experimentId as number || 0,
+        });
+        // Write optimistic data to IndexedDB
+        const expId = (input as unknown as Record<string, unknown>)._experimentId as number;
+        if (expId) {
+          await writeOptimisticObservation(expId, {
+            subject_id: input.subject_id,
+            observation_date: input.observation_date,
+            weight: input.weight ?? null,
+            stool_score: input.stool_score ?? null,
+            behavior_score: input.behavior_score ?? null,
+            notes: input.notes || null,
+          });
+        }
+        await refreshPendingCount();
+        return { alerts: [], _queued: true } as unknown as ReturnType<typeof observationsApi.create> extends Promise<infer T> ? T : never;
+      }
+      return observationsApi.create(input);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['observations'] });
       queryClient.invalidateQueries({ queryKey: ['subjects'] });
@@ -196,8 +243,20 @@ export function useCreateObservation() {
 
 export function useCreateObservationsBatch() {
   const queryClient = useQueryClient();
+  const { isOnline, refreshPendingCount } = useAppContext();
   return useMutation({
-    mutationFn: (input: BatchCreateObservationsInput) => observationsApi.createBatch(input),
+    mutationFn: async (input: BatchCreateObservationsInput) => {
+      if (!isOnline) {
+        await addToSyncQueue({
+          type: 'createObservationsBatch',
+          payload: input as unknown as Record<string, unknown>,
+          experimentId: (input as unknown as Record<string, unknown>)._experimentId as number || 0,
+        });
+        await refreshPendingCount();
+        return [] as unknown as ReturnType<typeof observationsApi.createBatch> extends Promise<infer T> ? T : never;
+      }
+      return observationsApi.createBatch(input);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['observations'] });
       queryClient.invalidateQueries({ queryKey: ['subjects'] });
@@ -234,8 +293,20 @@ export function useCreateSample() {
 
 export function useCreateSamplesBatch() {
   const queryClient = useQueryClient();
+  const { isOnline, refreshPendingCount } = useAppContext();
   return useMutation({
-    mutationFn: (input: BatchCreateSamplesInput) => samplesApi.createBatch(input),
+    mutationFn: async (input: BatchCreateSamplesInput) => {
+      if (!isOnline) {
+        await addToSyncQueue({
+          type: 'createSamplesBatch',
+          payload: input as unknown as Record<string, unknown>,
+          experimentId: (input as unknown as Record<string, unknown>)._experimentId as number || 0,
+        });
+        await refreshPendingCount();
+        return [] as unknown as ReturnType<typeof samplesApi.createBatch> extends Promise<infer T> ? T : never;
+      }
+      return samplesApi.createBatch(input);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['samples'] });
     },

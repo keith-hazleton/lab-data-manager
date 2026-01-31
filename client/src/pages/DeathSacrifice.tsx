@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { useExperiment, useRecordExit, useSubjects } from '../hooks/useApi';
+import { useExperiment, useRecordExit } from '../hooks/useApi';
+import { useOfflineSubjects } from '../hooks/useOfflineData';
 import { Card, CardBody } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
@@ -24,7 +25,7 @@ export function DeathSacrifice() {
   const navigate = useNavigate();
 
   const { data: experiment } = useExperiment(expId);
-  const { data: subjects, isLoading } = useSubjects(expId);
+  const { data: subjects, isLoading } = useOfflineSubjects(expId);
   const recordExit = useRecordExit();
 
   const subject = subjects?.find(s => s.id === subjId);
@@ -59,6 +60,7 @@ export function DeathSacrifice() {
     try {
       await recordExit.mutateAsync({
         id: subjId,
+        experimentId: expId,
         input: {
           exit_date: exitDate,
           exit_type: exitType,

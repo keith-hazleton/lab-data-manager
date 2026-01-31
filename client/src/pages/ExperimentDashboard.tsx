@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useExperiment, useCages, useObservationsSummary, useObservationAlerts, useDeleteExperiment } from '../hooks/useApi';
+import { SyncForOffline } from '../components/SyncForOffline';
 import { Card, CardBody, CardHeader } from '../components/common/Card';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { Button } from '../components/common/Button';
@@ -51,9 +52,12 @@ export function ExperimentDashboard() {
               {totalAlive} mice alive
             </p>
           </div>
-          <Link to={`/experiment/${id}/edit`}>
-            <Button variant="secondary" size="sm">Edit</Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <SyncForOffline experimentId={id} />
+            <Link to={`/experiment/${id}/edit`}>
+              <Button variant="secondary" size="sm">Edit</Button>
+            </Link>
+          </div>
         </div>
       </div>
 

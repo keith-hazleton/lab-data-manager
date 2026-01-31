@@ -1,18 +1,14 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-
-interface OfflineQueueItem {
-  id: string;
-  method: string;
-  endpoint: string;
-  body?: unknown;
-  timestamp: number;
-}
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { getSyncQueueCount } from '../db/offline-db';
+import { syncPendingMutations, type SyncPushResult } from '../services/sync-manager';
 
 interface AppContextValue {
   isOnline: boolean;
-  offlineQueue: OfflineQueueItem[];
-  addToQueue: (item: Omit<OfflineQueueItem, 'id' | 'timestamp'>) => void;
-  clearQueue: () => void;
+  pendingCount: number;
+  isSyncing: boolean;
+  lastSyncResult: SyncPushResult | null;
+  syncNow: () => Promise<void>;
+  refreshPendingCount: () => Promise<void>;
   isMobile: boolean;
 }
 
@@ -20,10 +16,9 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [offlineQueue, setOfflineQueue] = useState<OfflineQueueItem[]>(() => {
-    const saved = localStorage.getItem('offlineQueue');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [pendingCount, setPendingCount] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncResult, setLastSyncResult] = useState<SyncPushResult | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -42,32 +37,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const refreshPendingCount = useCallback(async () => {
+    try {
+      const count = await getSyncQueueCount();
+      setPendingCount(count);
+    } catch {
+      // IndexedDB not available
+    }
+  }, []);
+
+  // Poll pending count
   useEffect(() => {
-    localStorage.setItem('offlineQueue', JSON.stringify(offlineQueue));
-  }, [offlineQueue]);
+    refreshPendingCount();
+    const interval = setInterval(refreshPendingCount, 5000);
+    return () => clearInterval(interval);
+  }, [refreshPendingCount]);
 
-  const addToQueue = (item: Omit<OfflineQueueItem, 'id' | 'timestamp'>) => {
-    setOfflineQueue((prev) => [
-      ...prev,
-      {
-        ...item,
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-      },
-    ]);
-  };
-
-  const clearQueue = () => {
-    setOfflineQueue([]);
-  };
+  const syncNow = useCallback(async () => {
+    if (isSyncing || !isOnline) return;
+    setIsSyncing(true);
+    try {
+      const result = await syncPendingMutations();
+      setLastSyncResult(result);
+      await refreshPendingCount();
+    } catch (err) {
+      console.error('Sync failed:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [isSyncing, isOnline, refreshPendingCount]);
 
   return (
     <AppContext.Provider
       value={{
         isOnline,
-        offlineQueue,
-        addToQueue,
-        clearQueue,
+        pendingCount,
+        isSyncing,
+        lastSyncResult,
+        syncNow,
+        refreshPendingCount,
         isMobile,
       }}
     >

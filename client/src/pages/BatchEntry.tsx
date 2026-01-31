@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { useCages, useExperiment, useCreateObservationsBatch } from '../hooks/useApi';
+import { useExperiment, useCreateObservationsBatch } from '../hooks/useApi';
+import { useOfflineCages } from '../hooks/useOfflineData';
 import { Card, CardBody } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
@@ -12,7 +13,7 @@ export function BatchEntry() {
   const navigate = useNavigate();
 
   const { data: experiment } = useExperiment(expId);
-  const { data: cages, isLoading } = useCages(expId);
+  const { data: cages, isLoading } = useOfflineCages(expId);
   const createBatch = useCreateObservationsBatch();
 
   const [selectedCages, setSelectedCages] = useState<Set<string>>(new Set());

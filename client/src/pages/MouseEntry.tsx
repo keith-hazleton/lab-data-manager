@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useSubjects, useExperiment, useCreateObservation } from '../hooks/useApi';
+import { useExperiment, useCreateObservation } from '../hooks/useApi';
+import { useOfflineSubjects } from '../hooks/useOfflineData';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Card, CardBody } from '../components/common/Card';
 import { Button } from '../components/common/Button';
@@ -33,9 +34,9 @@ export function MouseEntry() {
 
   const { data: experiment } = useExperiment(expId);
   // If editing a past day, get subjects that were alive on that date with observations for that date
-  const { data: subjects, isLoading } = useSubjects(expId, {
+  const { data: subjects, isLoading } = useOfflineSubjects(expId, {
     cage_number: cageNumber,
-    ...(isEditingPastDay ? { alive_on_date: observationDate, observation_date: observationDate } : { status: 'alive' }),
+    ...(isEditingPastDay ? { observation_date: observationDate } : { status: 'alive' }),
   });
   const createObservation = useCreateObservation();
 

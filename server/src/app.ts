@@ -12,6 +12,7 @@ import { storageRouter } from './routes/storage.js';
 import { exportRouter } from './routes/export.js';
 import { plotsRouter } from './routes/plots.js';
 import { backupRouter } from './routes/backup.js';
+import { syncRouter } from './routes/sync.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,6 +42,7 @@ export function createApp() {
   app.use('/api/export', exportRouter);
   app.use('/api/plots', plotsRouter);
   app.use('/api/backup', backupRouter);
+  app.use('/api/sync', syncRouter);
 
   // In production, serve the built client
   if (isProduction) {

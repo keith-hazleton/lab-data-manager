@@ -3,7 +3,6 @@ import { useAppContext } from '../../context/AppContext';
 import { Header } from './Header';
 import { MobileNav } from './MobileNav';
 import { Sidebar } from './Sidebar';
-import { SyncStatus } from './SyncStatus';
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,7 +14,6 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <SyncStatus />
 
       <div className="flex">
         {!isMobile && <Sidebar />}
